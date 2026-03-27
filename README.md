@@ -1,3 +1,12 @@
+---
+title: OpenEnv Email Triage
+emoji: 📧
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
 # OpenEnv: Email Triage Agent
 
 This repository contains a full OpenEnv-compliant real-world environment for evaluating Autonomous AI Agents on complex, multi-step textual tasks.
