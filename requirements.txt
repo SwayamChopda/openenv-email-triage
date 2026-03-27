@@ -2,5 +2,5 @@ fastapi==0.115.0
 uvicorn==0.30.6
 pydantic==2.8.2
 openai==1.42.0
-openenv[all]==0.0.12
+openenv[all]==0.1.13
 requests==2.32.3
