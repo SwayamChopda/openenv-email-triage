@@ -67,7 +67,7 @@ def get_tasks():
 @app.post("/baseline")
 def run_baseline_agent():
     # Trigger inference script and returns baseline score for all 3 tasks
-    from baseline import evaluate_all
+    from inference import evaluate_all
     try:
         results = evaluate_all()
         return {"baseline_scores": results}

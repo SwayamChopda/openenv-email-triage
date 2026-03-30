@@ -1,6 +1,6 @@
 name: "Email Triage Agent"
 description: "A real-world task environment where an agent acts as an executive assistant, triaging a chaotic inbox, deleting spam, sorting newsletters, categorizing tech support issues, and drafting critical manager synthesis replies."
-github_url: "https://github.com/example/openenv-email-triage"
+github_url: "https://github.com/SwayamChopda/openenv-email-triage"
 tags:
   - email
   - assistant

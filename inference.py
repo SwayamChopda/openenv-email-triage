@@ -13,19 +13,15 @@ except ImportError:
     pass
 
 def run_agent(task_id: str, max_steps=15) -> float:
-    api_key = os.environ.get("OPENAI_API_KEY")
-    groq_api_key = os.environ.get("GROQ_API_KEY")
+    api_base_url = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
+    model_name = os.environ.get("MODEL_NAME", "gpt-4o")
+    hf_token = os.environ.get("HF_TOKEN")
     
-    if not api_key and not groq_api_key:
-        print("OPENAI_API_KEY or GROQ_API_KEY not set. Baseline cannot run. Returning 0.0")
+    if not hf_token:
+        print("HF_TOKEN not set. Baseline cannot run. Returning 0.0")
         return 0.0
         
-    if groq_api_key:
-        client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=groq_api_key)
-        model_name = "llama-3.3-70b-versatile"
-    else:
-        client = OpenAI(api_key=api_key)
-        model_name = "gpt-4o"
+    client = OpenAI(base_url=api_base_url, api_key=hf_token)
         
     env = EmailEnv()
     obs = env.reset(task_id=task_id)
@@ -97,10 +93,9 @@ def run_agent(task_id: str, max_steps=15) -> float:
     
 
 def evaluate_all():
-    api_key = os.environ.get("OPENAI_API_KEY")
-    groq_api_key = os.environ.get("GROQ_API_KEY")
-    if not api_key and not groq_api_key:
-        return {"error": "API Key not set"}
+    hf_token = os.environ.get("HF_TOKEN")
+    if not hf_token:
+        return {"error": "HF_TOKEN not set"}
         
     scores = {}
     for task_id in TASKS.keys():
