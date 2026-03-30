@@ -11,6 +11,7 @@ app = FastAPI(title="OpenEnv: Email Triage Agent")
 env = EmailEnv()
 
 @app.get("/")
+@app.head("/")
 def read_root():
     return {"status": "ok", "message": "Welcome to OpenEnv Email Triage. Check out /docs for schema and endpoints."}
 
