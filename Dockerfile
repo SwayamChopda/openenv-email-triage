@@ -17,5 +17,5 @@ COPY --chown=user:user . .
 EXPOSE 7860
 
 # Command to run the application
-RUN echo "busting broken Hugging Face builder cache layer"
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
+RUN echo "busting broken Hugging Face builder cache layer v2"
+CMD ["uvicorn", "server.app:app", "--host", "0.0.0.0", "--port", "7860"]
