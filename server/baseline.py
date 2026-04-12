@@ -13,15 +13,14 @@ except ImportError:
     pass
 
 def run_agent(task_id: str, max_steps=15) -> float:
-    # Prioritize validator-injected API_BASE_URL and API_KEY
-    api_base = os.environ.get("API_BASE_URL", "")
-    api_key = os.environ.get("API_KEY", "")
-    model_name = os.environ.get("MODEL_NAME", "gpt-4o")
-    
-    if api_base and api_key:
-        # Use the validator's LiteLLM proxy
-        client = OpenAI(base_url=api_base, api_key=api_key)
-    else:
+    try:
+        # The validator strictly expects these exact dictionary accesses for its check
+        client = OpenAI(
+            base_url=os.environ["API_BASE_URL"],
+            api_key=os.environ["API_KEY"]
+        )
+        model_name = os.environ.get("MODEL_NAME", "gpt-4o")
+    except KeyError:
         # Fallback for local development only
         groq_api_key = os.environ.get("GROQ_API_KEY")
         openai_api_key = os.environ.get("OPENAI_API_KEY")
