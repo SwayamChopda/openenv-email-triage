@@ -19,7 +19,7 @@ def safe_request(method, url, **kwargs):
         return None
 
 def run_agent(task_id: str, max_steps=15) -> float:
-    print(f"START {task_id}")
+    print(f"[START] task={task_id}", flush=True)
     
     # 1. Safely initialize OpenAI client
     try:
@@ -37,6 +37,7 @@ def run_agent(task_id: str, max_steps=15) -> float:
         client = OpenAI(base_url=API_BASE_URL, api_key=api_key)
     except Exception as e:
         # print(f"Unhandled exception initializing OpenAI client: {e}")
+        print(f"[END] task={task_id} score=0.0 steps=0", flush=True)
         return 0.0
 
     # 2. Reset the Environment
@@ -44,6 +45,7 @@ def run_agent(task_id: str, max_steps=15) -> float:
     
     obs_data = safe_request("POST", f"{env_url}/reset", json={"task_id": task_id})
     if not obs_data:
+        print(f"[END] task={task_id} score=0.0 steps=0", flush=True)
         return 0.0
 
     # We assume 'tasks' endpoint tells us what the task is. Optional, but helpful.
@@ -76,6 +78,7 @@ def run_agent(task_id: str, max_steps=15) -> float:
     ]
     
     score = 0.0
+    step_count = 0
     for step in range(max_steps):
         messages.append({
             "role": "user",
@@ -107,7 +110,8 @@ def run_agent(task_id: str, max_steps=15) -> float:
         })
         
         # 5. Send action to environment safely
-        print(f"STEP {action_content}")
+        step_count += 1
+        print(f"[STEP] step={step_count} reward={score}", flush=True)
         step_res = safe_request("POST", f"{env_url}/step", json=action_dict)
         if not step_res:
             break
@@ -123,7 +127,7 @@ def run_agent(task_id: str, max_steps=15) -> float:
     if grader_data and "score" in grader_data:
         score = grader_data["score"]
         
-    print(f"END {score}")
+    print(f"[END] task={task_id} score={score} steps={step_count}", flush=True)
     return score
 
 def evaluate_all():
