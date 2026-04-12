@@ -16,21 +16,26 @@ def safe_request(method, url, **kwargs):
 def run_agent(task_id: str, max_steps=15) -> float:
     print(f"[START] task={task_id}", flush=True)
     
-    # 1. Initialize OpenAI client using validator-injected env vars
+    # 1. Initialize OpenAI client safely
     try:
-        api_base = os.environ["API_BASE_URL"]
-        api_key = os.environ["API_KEY"]
+        api_base = os.environ.get("API_BASE_URL")
+        api_key = os.environ.get("API_KEY")
         model_name = os.environ.get("MODEL_NAME", "gpt-4o")
         
-        print(f"Using API_BASE_URL={api_base}", flush=True)
-        print(f"Using MODEL_NAME={model_name}", flush=True)
-        print(f"API_KEY is set: {bool(api_key)}", flush=True)
-        
-        client = OpenAI(base_url=api_base, api_key=api_key)
-    except KeyError as e:
-        print(f"Missing required env var: {e}", flush=True)
-        print(f"[END] task={task_id} score=0.0 steps=0", flush=True)
-        return 0.0
+        if api_base and api_key:
+            print(f"Using validator API proxy: {api_base}", flush=True)
+            client = OpenAI(base_url=api_base, api_key=api_key)
+        else:
+            # Fallback to standard OpenAI for local execution
+            print("Validator API vars not found. Falling back to local OPENAI_API_KEY.", flush=True)
+            api_key = os.environ.get("OPENAI_API_KEY")
+            if not api_key:
+                print("No OPENAI_API_KEY set.", flush=True)
+                print(f"[END] task={task_id} score=0.0 steps=0", flush=True)
+                return 0.0
+            client = OpenAI(api_key=api_key)
+            model_name = "gpt-4o"
+            
     except Exception as e:
         print(f"Error initializing OpenAI client: {e}", flush=True)
         print(f"[END] task={task_id} score=0.0 steps=0", flush=True)
