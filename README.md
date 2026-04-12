@@ -33,7 +33,7 @@ This repository contains a full OpenEnv-compliant real-world environment for eva
 3. **Local Dev (Python 3.11+):**
    ```bash
    pip install -r requirements.txt
-   uvicorn app:app --port 7860
+   uvicorn server.app:app --port 7860
    ```
 
 ## Running the Baseline
