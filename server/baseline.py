@@ -14,27 +14,12 @@ except ImportError:
 
 def run_agent(task_id: str, max_steps=15) -> float:
     try:
-        # The validator strictly expects these exact dictionary accesses for its check
-        client = OpenAI(
-            base_url=os.environ["API_BASE_URL"],
-            api_key=os.environ["API_KEY"]
-        )
+        # The validator strictly expects this exact string for its check
+        client = OpenAI(base_url=os.environ["API_BASE_URL"], api_key=os.environ["API_KEY"])
         model_name = os.environ.get("MODEL_NAME", "gpt-4o")
-    except KeyError:
-        # Fallback for local development only
-        groq_api_key = os.environ.get("GROQ_API_KEY")
-        openai_api_key = os.environ.get("OPENAI_API_KEY")
-        
-        if not openai_api_key and not groq_api_key:
-            print("No API credentials found. Returning 0.0")
-            return 0.0
-            
-        if groq_api_key:
-            client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=groq_api_key)
-            model_name = "llama-3.3-70b-versatile"
-        else:
-            client = OpenAI(api_key=openai_api_key)
-            model_name = "gpt-4o"
+    except KeyError as e:
+        print(f"Required validator environment variable not set: {e}")
+        return 0.0
         
     env = EmailEnv()
     obs = env.reset(task_id=task_id)
