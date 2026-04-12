@@ -19,42 +19,31 @@ def safe_request(method, url, **kwargs):
         return None
 
 def run_agent(task_id: str, max_steps=15) -> float:
-    print(f"--- Starting run_agent for task: {task_id} ---")
+    print(f"START {task_id}")
     
     # 1. Safely initialize OpenAI client
     try:
-        api_key = os.environ.get("OPENAI_API_KEY")
-        groq_api_key = os.environ.get("GROQ_API_KEY")
-        hf_token = os.environ.get("HF_TOKEN")
+        API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+        MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o")
+        HF_TOKEN = os.getenv("HF_TOKEN")
         
-        # Ensure api_base_url is valid, falling back to default if missing or empty string
-        api_base_url = os.environ.get("OPENAI_BASE_URL")
-        if not api_base_url:
-            api_base_url = "https://api.openai.com/v1"
-        
-        if hf_token:
-            client = OpenAI(base_url=api_base_url, api_key=hf_token)
-            model_name = "default-model"
-        elif groq_api_key:
-            client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=groq_api_key)
-            model_name = "llama-3.3-70b-versatile"
-        elif api_key:
-            client = OpenAI(api_key=api_key)
-            model_name = "gpt-4o"
-        else:
-            print("No valid API key found. Returning 0.0")
-            return 0.0
+        # Verify valid fallback even if set to empty string
+        if not API_BASE_URL:
+            API_BASE_URL = "https://api.openai.com/v1"
+        if not MODEL_NAME:
+            MODEL_NAME = "gpt-4o"
+            
+        api_key = HF_TOKEN if HF_TOKEN else os.getenv("OPENAI_API_KEY", "dummy")
+        client = OpenAI(base_url=API_BASE_URL, api_key=api_key)
     except Exception as e:
-        print(f"Unhandled exception initializing OpenAI client: {e}")
+        # print(f"Unhandled exception initializing OpenAI client: {e}")
         return 0.0
 
     # 2. Reset the Environment
     env_url = os.environ.get("ENV_URL", "http://localhost:7860")
-    print(f"Connecting to environment at {env_url}...")
     
     obs_data = safe_request("POST", f"{env_url}/reset", json={"task_id": task_id})
     if not obs_data:
-        print("Failed to reset environment. Returning 0.0")
         return 0.0
 
     # We assume 'tasks' endpoint tells us what the task is. Optional, but helpful.
@@ -96,7 +85,7 @@ def run_agent(task_id: str, max_steps=15) -> float:
         # 3. Request action from LLM safely
         try:
             response = client.chat.completions.create(
-                model=model_name,
+                model=MODEL_NAME,
                 messages=messages,
                 response_format={"type": "json_object"}
             )
@@ -109,7 +98,6 @@ def run_agent(task_id: str, max_steps=15) -> float:
         try:
             action_dict = json.loads(action_content)
         except Exception as e:
-            print(f"JSON parsing error at step {step}: {e}. Output was: {action_content}")
             messages.append({"role": "user", "content": f"Invalid JSON: {e}"})
             continue
 
@@ -119,16 +107,15 @@ def run_agent(task_id: str, max_steps=15) -> float:
         })
         
         # 5. Send action to environment safely
+        print(f"STEP {action_content}")
         step_res = safe_request("POST", f"{env_url}/step", json=action_dict)
         if not step_res:
-            print(f"Failed to execute step ({action_dict}). Stop trying.")
             break
             
         obs_data = step_res.get("observation", obs_data)
         score = step_res.get("reward", score)
         
         if step_res.get("done", False):
-            print("Task marked as done.")
             break
             
     # Attempt to fetch final score
@@ -136,10 +123,10 @@ def run_agent(task_id: str, max_steps=15) -> float:
     if grader_data and "score" in grader_data:
         score = grader_data["score"]
         
+    print(f"END {score}")
     return score
 
 def evaluate_all():
-    print("Starting Evaluate All...")
     scores = {}
     tasks = ["easy", "medium", "hard"]
     
@@ -153,15 +140,12 @@ def evaluate_all():
             score = run_agent(task_id)
             scores[task_id] = score
         except Exception as e:
-            print(f"Unhandled exception inside run_agent for task {task_id}: {e}")
             scores[task_id] = 0.0
 
     return scores
 
 if __name__ == "__main__":
     try:
-        results = evaluate_all()
-        print("Final Baseline Results:", results)
+        evaluate_all()
     except Exception as e:
-        print(f"Unhandled exception in evaluate_all: {e}")
         exit(1)
