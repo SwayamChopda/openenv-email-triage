@@ -5,7 +5,7 @@ from openai import OpenAI
 
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(override=False)
 except ImportError:
     pass
 
@@ -23,17 +23,19 @@ def run_agent(task_id: str, max_steps=15) -> float:
     
     # 1. Safely initialize OpenAI client
     try:
-        API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-        MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o")
-        HF_TOKEN = os.getenv("HF_TOKEN")
+        # Use the validator-injected API_BASE_URL and API_KEY directly
+        API_BASE_URL = os.environ.get("API_BASE_URL", "https://api.openai.com/v1")
+        MODEL_NAME = os.environ.get("MODEL_NAME", "gpt-4o")
+        api_key = os.environ.get("API_KEY", "")
         
-        # Verify valid fallback even if set to empty string
+        # Fallback chain only if API_KEY is not set
+        if not api_key:
+            api_key = os.environ.get("HF_TOKEN", "") or os.environ.get("OPENAI_API_KEY", "dummy")
         if not API_BASE_URL:
             API_BASE_URL = "https://api.openai.com/v1"
         if not MODEL_NAME:
             MODEL_NAME = "gpt-4o"
             
-        api_key = os.getenv("API_KEY") or HF_TOKEN or os.getenv("OPENAI_API_KEY", "dummy")
         client = OpenAI(base_url=API_BASE_URL, api_key=api_key)
     except Exception as e:
         # print(f"Unhandled exception initializing OpenAI client: {e}")
