@@ -33,7 +33,7 @@ def run_agent(task_id: str, max_steps=15) -> float:
         if not MODEL_NAME:
             MODEL_NAME = "gpt-4o"
             
-        api_key = HF_TOKEN if HF_TOKEN else os.getenv("OPENAI_API_KEY", "dummy")
+        api_key = os.getenv("API_KEY") or HF_TOKEN or os.getenv("OPENAI_API_KEY", "dummy")
         client = OpenAI(base_url=API_BASE_URL, api_key=api_key)
     except Exception as e:
         # print(f"Unhandled exception initializing OpenAI client: {e}")
