@@ -26,7 +26,11 @@ def run_agent(task_id: str, max_steps=15) -> float:
         api_key = os.environ.get("OPENAI_API_KEY")
         groq_api_key = os.environ.get("GROQ_API_KEY")
         hf_token = os.environ.get("HF_TOKEN")
-        api_base_url = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
+        
+        # Ensure api_base_url is valid, falling back to default if missing or empty string
+        api_base_url = os.environ.get("OPENAI_BASE_URL")
+        if not api_base_url:
+            api_base_url = "https://api.openai.com/v1"
         
         if hf_token:
             client = OpenAI(base_url=api_base_url, api_key=hf_token)
