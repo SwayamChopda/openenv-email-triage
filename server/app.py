@@ -3,9 +3,9 @@ from pydantic import BaseModel
 from typing import Dict, Any, List, Optional
 import json
 
-from models import Action, Observation, State, StepResponse
-from environment import EmailEnv
-from tasks import TASKS
+from server.models import Action, Observation, State, StepResponse
+from server.environment import EmailEnv
+from server.tasks import TASKS
 
 app = FastAPI(title="OpenEnv: Email Triage Agent")
 env = EmailEnv()
@@ -48,8 +48,7 @@ def get_grader():
 @app.get("/tasks")
 def get_tasks():
     # Return tasks and Action JSON schema
-    # Pydantic v2 usage
-    from models import Action
+    from server.models import Action
     # Pydantic >= 2.0 uses model_json_schema() instead of schema() on Union directly? Let's use TypeAdapter
     try:
         from pydantic import TypeAdapter
@@ -66,10 +65,16 @@ def get_tasks():
 @app.get("/baseline")
 @app.post("/baseline")
 def run_baseline_agent():
-    # Trigger inference script and returns baseline score for all 3 tasks
-    from baseline import evaluate_all
+    from server.baseline import evaluate_all
     try:
         results = evaluate_all()
         return {"baseline_scores": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+def main():
+    import uvicorn
+    import os
+    port = int(os.environ.get("PORT", "7860"))
+    uvicorn.run("server.app:app", host="0.0.0.0", port=port, reload=False)
+
