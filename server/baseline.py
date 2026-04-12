@@ -13,19 +13,29 @@ except ImportError:
     pass
 
 def run_agent(task_id: str, max_steps=15) -> float:
-    api_key = os.environ.get("OPENAI_API_KEY")
-    groq_api_key = os.environ.get("GROQ_API_KEY")
+    # Prioritize validator-injected API_BASE_URL and API_KEY
+    api_base = os.environ.get("API_BASE_URL", "")
+    api_key = os.environ.get("API_KEY", "")
+    model_name = os.environ.get("MODEL_NAME", "gpt-4o")
     
-    if not api_key and not groq_api_key:
-        print("OPENAI_API_KEY or GROQ_API_KEY not set. Baseline cannot run. Returning 0.0")
-        return 0.0
-        
-    if groq_api_key:
-        client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=groq_api_key)
-        model_name = "llama-3.3-70b-versatile"
+    if api_base and api_key:
+        # Use the validator's LiteLLM proxy
+        client = OpenAI(base_url=api_base, api_key=api_key)
     else:
-        client = OpenAI(api_key=api_key)
-        model_name = "gpt-4o"
+        # Fallback for local development only
+        groq_api_key = os.environ.get("GROQ_API_KEY")
+        openai_api_key = os.environ.get("OPENAI_API_KEY")
+        
+        if not openai_api_key and not groq_api_key:
+            print("No API credentials found. Returning 0.0")
+            return 0.0
+            
+        if groq_api_key:
+            client = OpenAI(base_url="https://api.groq.com/openai/v1", api_key=groq_api_key)
+            model_name = "llama-3.3-70b-versatile"
+        else:
+            client = OpenAI(api_key=openai_api_key)
+            model_name = "gpt-4o"
         
     env = EmailEnv()
     obs = env.reset(task_id=task_id)
@@ -97,7 +107,7 @@ def run_agent(task_id: str, max_steps=15) -> float:
     
 
 def evaluate_all():
-    api_key = os.environ.get("OPENAI_API_KEY")
+    api_key = os.environ.get("API_KEY") or os.environ.get("OPENAI_API_KEY")
     groq_api_key = os.environ.get("GROQ_API_KEY")
     if not api_key and not groq_api_key:
         return {"error": "API Key not set"}
