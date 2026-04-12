@@ -1,5 +1,5 @@
-from models import Action, Observation, State, EmailSummary, StepResponse
-from tasks import TASKS
+from server.models import Action, Observation, State, EmailSummary, StepResponse
+from server.tasks import TASKS
 import copy
 
 class EmailEnv:

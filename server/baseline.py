@@ -2,9 +2,9 @@ import os
 import json
 from openai import OpenAI
 from pydantic import TypeAdapter
-from environment import EmailEnv
-from tasks import TASKS
-from models import Action
+from server.environment import EmailEnv
+from server.tasks import TASKS
+from server.models import Action
 
 try:
     from dotenv import load_dotenv

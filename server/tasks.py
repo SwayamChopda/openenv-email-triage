@@ -1,5 +1,5 @@
 from typing import Dict, Any, Callable
-from models import Email, State
+from server.models import Email, State
 
 def setup_easy_task() -> State:
     emails = {
